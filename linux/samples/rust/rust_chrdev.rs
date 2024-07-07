@@ -2,7 +2,8 @@
 
 //! Rust character device sample.
 
-use core::result::Result::Err;
+use core::cmp::min;
+use core::result::Result::{Err, Ok};
 
 use kernel::prelude::*;
 use kernel::sync::Mutex;
@@ -40,11 +41,23 @@ impl file::Operations for RustFile {
     }
 
     fn write(_this: &Self,_file: &file::File,_reader: &mut impl kernel::io_buffer::IoBufferReader,_offset:u64,) -> Result<usize> {
-        Err(EPERM)
+        // 上锁 取出缓冲区
+        let mut mem = _this.inner.lock();
+        let offset: usize = _offset.try_into()?;
+        let len = min(mem.len().saturating_sub(offset), _reader.len());
+        // 从 io buffer 读取到设备缓冲区
+        _reader.read_slice(&mut mem[offset..offset + len])?;
+        Ok(len)
     }
 
     fn read(_this: &Self,_file: &file::File,_writer: &mut impl kernel::io_buffer::IoBufferWriter,_offset:u64,) -> Result<usize> {
-        Err(EPERM)
+        // 上锁 取出缓冲区
+        let mem = _this.inner.lock();
+        let offset: usize = _offset.try_into()?;
+        let len = min(mem.len().saturating_sub(offset), _writer.len());
+        // 从 io buffer 读取到设备缓冲区
+        _writer.write_slice(&mem[offset..offset + len])?;
+        Ok(len)
     }
 }
 
