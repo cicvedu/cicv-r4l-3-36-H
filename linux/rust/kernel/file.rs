@@ -163,6 +163,10 @@ impl File {
         // SAFETY: The file is valid because the shared reference guarantees a nonzero refcount.
         unsafe { core::ptr::addr_of!((*self.0.get()).f_flags).read() }
     }
+    /// Returns the inner
+    pub fn get_inner(&self) -> &UnsafeCell<bindings::file>{
+        &self.0
+    }
 }
 
 // SAFETY: The type invariants guarantee that `File` is always ref-counted.

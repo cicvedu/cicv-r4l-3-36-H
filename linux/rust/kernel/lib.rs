@@ -37,6 +37,7 @@ compile_error!("Missing kernel configuration for conditional compilation");
 #[cfg(not(test))]
 #[cfg(not(testlib))]
 mod allocator;
+pub mod completion;
 
 #[doc(hidden)]
 pub use bindings;
